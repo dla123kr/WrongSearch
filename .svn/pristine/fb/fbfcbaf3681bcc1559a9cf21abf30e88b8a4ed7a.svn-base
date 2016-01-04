@@ -1,0 +1,89 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+using System.Resources;
+
+namespace WrongSearch_Client.UC
+{
+    public partial class StatementUC : UserControl
+    {
+        // StatementUC에서 사용되는 전역변수를 관리합니다.
+        #region 변수 모음
+
+        public ClientForm clientForm = null;
+        public int i = 4;
+
+        #endregion
+
+        // Form의 켜짐에 관련된 함수를 관리합니다.
+        #region Form Load
+
+        public StatementUC(ClientForm cf)
+        {
+            InitializeComponent();
+
+            clientForm = cf;
+        }
+
+        #endregion
+
+        // 클라이언트에서 서버로 버퍼를 보내는 함수를 관리합니다.
+        #region Send~
+
+        //버튼누르면 버퍼로 시작이랑 총그림갯수를 보냅니다
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            int max = clientForm.gameUC.max; //총그림갯수
+            NetworkStream ns = clientForm.clientSocket.GetStream();
+
+            //start√총그림갯수√사람이름√
+            string msg = "start√" + max + "√"+clientForm.user.room+"√";
+
+            byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+            ns.Write(buf, 0, buf.Length);
+            ns.Flush();
+            this.btnStart.Visible = false;
+        }
+
+        // 방나가기
+        private void btnExit_Click(object sender, EventArgs e)
+        {
+            NetworkStream ns = clientForm.clientSocket.GetStream();
+
+            string msg = "exitRoom√" + clientForm.user.room + "√";
+            byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+            ns.Write(buf, 0, buf.Length);
+            ns.Flush();
+        }
+
+        #endregion
+
+        //테스트용
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            if (i < 9)
+            {
+                string[] pictureNum = clientForm.pictureNum;
+                ResourceManager rm = Properties.Resources.ResourceManager;
+
+                clientForm.gameUC.label3.Text = "picture" + pictureNum[i] + "_1";
+                clientForm.gameUC.pbLeft.Image = (Image)rm.GetObject("picture" + pictureNum[i] + "_1");
+                clientForm.gameUC.pbRight.Image = (Image)rm.GetObject("picture" + pictureNum[i] + "_2");
+
+                i++;
+            }
+        }
+
+    }
+}

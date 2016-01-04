@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ArrayOfClsPerson xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <clsPerson>
+    <classNumber>12111624</classNumber>
+    <password>CfUV10hCHjQ=</password>
+    <name>임성준</name>
+    <phone>01073368108</phone>
+    <gender>남</gender>
+    <win>0</win>
+    <lose>0</lose>
+  </clsPerson>
+</ArrayOfClsPerson>

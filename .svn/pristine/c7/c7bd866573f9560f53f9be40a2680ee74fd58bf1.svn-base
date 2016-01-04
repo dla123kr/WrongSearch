@@ -1,0 +1,729 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Xml.Serialization;
+using System.IO;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+using WrongSearch_Server.Class;
+
+namespace WrongSearch_Server
+{
+    public partial class ServerForm : Form
+    {
+        // ServerForm에서 사용되는 전역변수를 관리합니다.
+        #region 변수 모음
+
+        private TcpListener serverSocket = null;
+        private TcpClient clientSocket = null;
+
+        public List<handleClient> allClient = new List<handleClient>(); // 모든 클라이언트 관리
+        public List<clsPerson> member = new List<clsPerson>(); // 회원을 관리
+        public List<clsPerson> waiting = new List<clsPerson>(); // 대기인원 관리
+        public WATCrypt m_crypt = new WATCrypt("lb2hlb2h"); // 암호화,복호화
+
+        public int maxPlayer = 9;
+        public int connectCnt = 0;
+        public bool readyPlayer = false;
+        public int RoomNumber = 1;      //방번호
+
+        #endregion
+
+        // Form의 켜짐과 꺼짐에 관련된 함수를 관리합니다.
+        #region Form Load & Closing
+
+        public ServerForm()
+        {
+            InitializeComponent();
+        }
+
+        // 폼이 켜지면 IP를 받아오고, XML 역직렬화를 함.
+        // 클라이언트를 받아들이는 쓰레드를 작동시킴
+        private void ServerForm_Load(object sender, EventArgs e)
+        {
+            lbIP.Text = GetIP();
+
+            member = XMLDeserialize("memberDB.xml"); // XML 역직렬화
+
+            Thread thr = new Thread(new ThreadStart(ListenClient));
+            thr.Start();
+        }
+
+        // 프로그램 종료 시, 모든 쓰레드 및 프로세스 종료
+        private void ServerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            for (int i = 0; i < member.Count; i++)
+            {
+                member[i].password = m_crypt.Encrypt(member[i].password);
+            }
+            XMLSerialize(member, "memberDB.xml");
+
+            Application.ExitThread();
+            Environment.Exit(0);
+        }
+
+        // IPv4의 주소를 받아옵니다.
+        private string GetIP()
+        {
+            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
+            string ip = null;
+            for (int i = 0; i < host.AddressList.Length; i++)
+            {
+                if (host.AddressList[i].AddressFamily == AddressFamily.InterNetwork)
+                    ip = host.AddressList[i].ToString();
+            }
+            return ip;
+        }
+
+        // 계속해서 클라이언트의 접속을 받아들인 후,
+        // 클라이언트의 접속이 있을 경우 handleClient 클래스로 받아들인다.
+        private void ListenClient()
+        {
+            serverSocket = new TcpListener(IPAddress.Any, 8088);
+            serverSocket.Start();
+
+            while (true)
+            {
+                clientSocket = serverSocket.AcceptTcpClient();
+
+                handleClient client = new handleClient(this);
+                client.startClient(clientSocket, connectCnt.ToString());
+                allClient.Add(client); // 모든 클라이언트 관리에 추가
+
+                connectCnt++;
+            }
+        }
+
+        #endregion
+
+        // XML 직렬화 & 역직렬화, 복호화 함수를 관리합니다.
+        #region XML & Decrypt
+
+        // XML 직렬화
+        // list: 직렬화할 리스트, filename: 파일이름
+        public void XMLSerialize(List<clsPerson> list, String filename)
+        {
+            XmlSerializer serializer = null;
+            FileStream stream = null;
+            try
+            {
+                serializer = new XmlSerializer(typeof(List<clsPerson>));
+                stream = new FileStream(filename, FileMode.Create, FileAccess.Write);
+                serializer.Serialize(stream, list);
+            }
+            finally
+            {
+                if (stream != null)
+                    stream.Close();
+            }
+        }
+
+        // XML 역직렬화
+        // filename: 역직렬화할 xml 파일이름
+        public List<clsPerson> XMLDeserialize(String filename)
+        {
+            XmlSerializer serializer = null;
+            FileStream stream = null;
+            List<clsPerson> list = new List<clsPerson>();
+            try
+            {
+                serializer = new XmlSerializer(typeof(List<clsPerson>));
+                stream = new FileStream(filename, FileMode.Open);
+                list = (List<clsPerson>)serializer.Deserialize(stream);
+            }
+            catch { }
+            finally
+            {
+                if (stream != null)
+                    stream.Close();
+            }
+
+            return ListPasswordDeCrypt(list);
+        }
+
+        // 받아온 리스트의 암호를 복호화함.
+        // list: 복호화할 리스트
+        public List<clsPerson> ListPasswordDeCrypt(List<clsPerson> list)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                try
+                {
+                    list[i].password = m_crypt.Decrypt(list[i].password);
+                }
+                catch { }
+            }
+
+            return list;
+        }
+
+        #endregion
+
+        // 서버에서 클라이언트로 버퍼를 보내는 함수를 관리합니다.
+        #region Send~
+
+        // 클라이언트에서 접속하면 대기실에 환영 메세지를 띄웁니다.
+        public void SendHello(clsPerson user)
+        {
+            for (int i = 0; i < allClient.Count; i++)
+            {
+                if (allClient[i].chatOn == 0)
+                {
+                    NetworkStream ns = allClient[i].clientSocket.GetStream();
+
+                    string msg = "hello√[ " + user.name + " 님이 접속하셨습니다. ]√";
+
+                    for (int j = 0; j < waiting.Count; j++)
+                    {
+
+                        msg = msg + waiting[j].name + "√" + waiting[j].classNumber + "√" + waiting[j].gender + "√" +
+                            waiting[j].win + "√" + waiting[j].room + "√";
+
+                    }
+
+                    byte[] buf = Encoding.UTF8.GetBytes(msg);
+                    ns.Write(buf, 0, buf.Length);
+                    ns.Flush();
+                }
+            }
+        }
+
+        // 클라이언트에서 시작버튼을 누를때
+        public void SendReady(int max, int roomNumber)
+        {
+            readyPlayer = (readyPlayer) ? false : true;
+
+            if (!readyPlayer)//상대가 기다리고있을때
+            {
+                for (int i = 0; i < allClient.Count; i++)
+                {
+                    if (waiting[i].room == roomNumber)
+                    {
+                        NetworkStream ns = allClient[i].clientSocket.GetStream();
+
+                        string msg = "ready√시작√";
+                        //byte[] buf = Encoding.UTF8.GetBytes(msg);
+                        //ns.Write(buf, 0, buf.Length);
+                        //ns.Flush();
+                        SendRandom(max, roomNumber, msg);
+                    }
+                }
+            }
+            else//상대가 없을때
+            {
+                for (int i = 0; i < allClient.Count; i++)
+                {
+                    if (waiting[i].room == roomNumber)
+                    {
+                        NetworkStream ns = allClient[i].clientSocket.GetStream();
+
+                        string msg = "ready√대기√";
+                        byte[] buf = Encoding.UTF8.GetBytes(msg);
+                        ns.Write(buf, 0, buf.Length);
+                        ns.Flush();
+                    }
+                }
+            }
+
+
+        }
+
+
+        // 서버로 온 채팅을 모든 클라이언트에 전송합니다.
+        // msg: 로비 혹은 방으로 클라이언트로 보낼 채팅 버퍼
+        public void SendChat(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            for (int i = 0; i < allClient.Count; i++)
+            {
+                if (allClient[i].chatOn.ToString() == msgArray[2])
+                {
+                    NetworkStream ns = allClient[i].clientSocket.GetStream();
+
+                    byte[] buf = Encoding.UTF8.GetBytes(msg);
+                    ns.Write(buf, 0, buf.Length);
+                    ns.Flush();
+
+                }
+            }
+        }
+
+        // 상대방에게 대전신청 버퍼를 보냅니다.
+        // msg: battle√이름√학번√상대방학번√
+        // msg: battleYes√상대방학번√학번√ or battleNo√학번√
+        public void SendBattle(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            if (msgArray[0] == "battle")
+            {
+                for (int i = 0; i < allClient.Count; i++)
+                {
+                    if (allClient[i].user.classNumber == msgArray[3])
+                    {
+                        NetworkStream ns = allClient[i].clientSocket.GetStream();
+
+                        byte[] buf = Encoding.UTF8.GetBytes(msg);
+                        ns.Write(buf, 0, buf.Length);
+                        ns.Flush();
+                    }
+                }
+            }
+            else if (msgArray[0] == "battleYes")
+            {
+                for (int i = 0; i < allClient.Count; i++)
+                {
+                    //방 들어감
+                    NetworkStream ns1 = allClient[i].clientSocket.GetStream();
+
+                    byte[] buf1 = Encoding.UTF8.GetBytes("room√" + RoomNumber.ToString() + "√"
+                        + msgArray[1] + "√" + msgArray[2] + "√");
+                    ns1.Write(buf1, 0, buf1.Length);
+                    ns1.Flush();
+
+                    if (allClient[i].user.classNumber == msgArray[1])
+                    {
+                        NetworkStream ns2 = allClient[i].clientSocket.GetStream();
+
+                        byte[] buf2 = Encoding.UTF8.GetBytes(msg);
+                        ns2.Write(buf2, 0, buf2.Length);
+                        ns2.Flush();
+                    }
+
+                    //방번호 전송
+                    if (allClient[i].user.classNumber == msgArray[1]
+                            || allClient[i].user.classNumber == msgArray[2])
+                    {
+                        allClient[i].chatOn = RoomNumber;
+                        waiting[i].room = RoomNumber;
+                        
+                    }
+
+                }
+                RoomNumber++;
+            }
+            else if (msgArray[0] == "battleNo")
+            {
+                for (int i = 0; i < allClient.Count; i++)
+                {
+                    if (allClient[i].user.classNumber == msgArray[1])
+                    {
+                        NetworkStream ns = allClient[i].clientSocket.GetStream();
+
+                        byte[] buf = Encoding.UTF8.GetBytes(msg);
+                        ns.Write(buf, 0, buf.Length);
+                        ns.Flush();
+                    }
+                }
+
+            }
+        }
+
+        //클라이언트가 시작버튼을 누르면 랜덤한 숫자 다섯개를 접속되어있는 방에 접속되어있는 클라이언트에 보내줍니다.
+        //msg : start√랜덤한 숫자 5개
+        public void SendRandom(int max, int roomNumber, string msg)
+        {
+            Random rd = new Random((int)DateTime.Now.Ticks);
+            int[] num = new int[5];
+            List<int> list = new List<int>();
+            msg = msg + "start√";
+
+            for (int i = 1; i <= max; i++)
+            {
+                list.Add(i);
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                int idx = rd.Next(0, list.Count-1);
+                num[i] = list[idx];
+                list.RemoveAt(idx);
+
+                msg = msg + num[i] + "√";
+            }
+            for (int i = 0; i < allClient.Count; i++)
+            {
+                if (waiting[i].room == roomNumber)
+                {
+                    NetworkStream ns = allClient[i].clientSocket.GetStream();
+                    byte[] buf = Encoding.UTF8.GetBytes(msg);
+                    ns.Write(buf, 0, buf.Length);
+                    ns.Flush();
+                }
+            }
+        }
+
+        public void SendExit(clsPerson user)
+        {
+            for (int i = 0; i < allClient.Count; i++)
+            {
+                if (allClient[i].chatOn == 0)
+                {
+                    NetworkStream ns = allClient[i].clientSocket.GetStream();
+
+                    string msg = "exit√[ " + user.name + " 님이 나가셨습니다. ]√";
+
+                    for (int j = 0; j < waiting.Count; j++)
+                    {
+
+                        msg = msg + waiting[j].name + "√" + waiting[j].classNumber + "√" + waiting[j].gender + "√" +
+                            waiting[j].win + "√" + waiting[j].room + "√";
+
+                    }
+
+                    byte[] buf = Encoding.UTF8.GetBytes(msg);
+                    ns.Write(buf, 0, buf.Length);
+                    ns.Flush();
+                }
+            }
+        }
+
+        // msg: exitRoom√방번호√
+        public void SendExitRoom(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            for (int i = 0; i < allClient.Count; i++)
+            {
+                if (allClient[i].chatOn == int.Parse(msgArray[1]))
+                {
+                    for (int j = 0; j < waiting.Count; j++)
+                    {
+                        if (allClient[i].user.classNumber == waiting[j].classNumber)
+                        {
+                            waiting[j].room = 0;
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < allClient.Count; i++)
+            {
+                if ((allClient[i].chatOn == int.Parse(msgArray[1])) || allClient[i].chatOn == 0)
+                {
+                    NetworkStream ns = allClient[i].clientSocket.GetStream();
+
+                    string msg2 = "exitRoom√" + msgArray[1] + "√";
+
+                    for (int j = 0; j < waiting.Count; j++)
+                    {
+                        msg2 = msg2 + waiting[j].name + "√" + waiting[j].classNumber + "√" + waiting[j].gender + "√" +
+                            waiting[j].win + "√" + waiting[j].room + "√";
+                    }
+                    msg2 = msg2.Replace("\0", string.Empty);
+                    byte[] buf = Encoding.UTF8.GetBytes(msg2);
+
+                    ns.Write(buf, 0, buf.Length);
+                    ns.Flush();
+
+                    allClient[i].chatOn = 0;
+                }
+            }
+        }
+
+        #endregion 
+
+        private void btnDebug_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+
+    public class handleClient
+    {
+        // handleClient에서 사용되는 전역변수를 관리합니다.
+        #region 변수 모음
+
+        ServerForm serverForm = null;
+
+        public TcpClient clientSocket;
+        public Thread recvThr = null;
+        string clNo;
+        string stdNum;
+
+        // chatOn
+        // -1: 로그인창, 0: 대기실, 1~: ~방번호
+        public int chatOn = -1;
+
+        public clsPerson user = null;
+
+        #endregion
+
+        // handleClient의 생성자 함수를 관리하고 쓰레드를 돌립니다.
+        #region Class Constructor
+
+        // ServerForm과 handleClient를 연결
+        public handleClient(ServerForm sf)
+        {
+            serverForm = sf;
+        }
+
+        // 클라이언트에 번호를 매기고, 버퍼를 받을 수 있게한다.
+        public void startClient(TcpClient inClientSocket, string clineNo)
+        {
+            this.clientSocket = inClientSocket;
+            this.clNo = clineNo;
+            recvThr = new Thread(RecvBuffer);
+            recvThr.Start();
+        }
+
+        #endregion
+
+        // 반복문을 사용하여 클라이언트에서 서버로 버퍼를 받아들입니다.
+        #region RecvBuffer
+
+        // 서버로 오는 모든 버퍼를 받아들인 후,
+        // 무슨 버퍼인지 판별 후 적절한 명령을 내림.
+        private void RecvBuffer()
+        {
+            while (true)
+            {
+                byte[] buf = new byte[1024];
+                string msg = null;
+
+                try
+                {
+                    NetworkStream ns = clientSocket.GetStream();
+
+                    ns.Read(buf, 0, buf.Length);
+                    msg = Encoding.UTF8.GetString(buf);
+
+                    // 여기부터 받아오는 버퍼의 종류마다 다르게 처리.
+                    RecvConnect(msg);
+                    RecvRegist(msg);
+                    RecvLogin(msg);
+                    RecvChat(msg);
+                    RecvBattle(msg);
+                    RecvStart(msg);
+                    RecvExit(msg);
+                    RecvExitRoom(msg);
+                }
+                catch (Exception e)
+                { //MessageBox.Show(e.Message);
+                }
+            }
+        }
+
+        // 클라이언트로부터 받아들여진 버퍼를 각 분류마다 다르게 처리합니다.
+        #region Recv~
+
+        private void RecvConnect(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            if (msgArray[0] == "connect")
+            {
+                NetworkStream ns = clientSocket.GetStream();
+                bool connectOK = false;
+
+                if ((serverForm.connectCnt - 1) < serverForm.maxPlayer)
+                {
+                    connectOK = true;
+                }
+
+                // buf: true or false√
+                byte[] buf = Encoding.UTF8.GetBytes(connectOK.ToString() + "√");
+                ns.Write(buf, 0, buf.Length);
+                ns.Flush();
+            }
+        }
+
+        // 회원가입버퍼를 처리합니다.
+        // msg: regist√학번√비밀번호√이름√성별√연락처
+        private void RecvRegist(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            if (msgArray[0] == "regist")
+            {
+                NetworkStream ns = clientSocket.GetStream();
+                string response = "regist√pass√";
+
+                for (int i = 0; i < serverForm.member.Count; i++)
+                {
+                    if (serverForm.member[i].classNumber == msgArray[1])
+                    {
+                        response = "regist√fail√"; // 학번이 중복일 경우
+                        break;
+                    }
+                }
+
+                byte[] buf = Encoding.UTF8.GetBytes(response);
+                ns.Write(buf, 0, buf.Length);
+                ns.Flush();
+
+                if (response == "regist√pass√")
+                {
+                    clsPerson person = new clsPerson(msgArray[1], msgArray[2], msgArray[3], msgArray[4], msgArray[5]);
+                    serverForm.member.Add(person);
+                }
+            }
+        }
+
+        // 로그인 버퍼를 처리합니다.               
+        // msg: login√학번√비밀번호√성별√승
+        private void RecvLogin(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+            
+
+            if (msgArray[0] == "login")
+            {
+                NetworkStream ns = clientSocket.GetStream();
+                string response = "login√fail√";
+
+                for (int i = 0; i < serverForm.member.Count; i++)
+                {
+                    // 새로 가입한 회원이 있을지도 모르므로 XML파일을 한번 더 불러옴
+                    //serverForm.member = serverForm.XMLDeserialize("memberDB.xml"); // XML 역직렬화
+
+                    if (serverForm.member[i].classNumber == msgArray[1] &&
+                        serverForm.member[i].password == msgArray[2])
+                    {
+                        if (duplicating(msgArray))  //중복이면
+                            response = "login√duplicate√" + serverForm.member[i].classNumber + "√";
+                        else
+                        {
+                            response = "login√pass√" + serverForm.member[i].classNumber + "√" +
+                                serverForm.member[i].name + "√" + serverForm.member[i].gender + "√" + serverForm.member[i].win + "√"; // 로그인에 성공한 경우
+                            // login√pass√학번√이름√성별√승
+                            user = new clsPerson(serverForm.member[i].classNumber, serverForm.member[i].password, serverForm.member[i].name, serverForm.member[i].gender, serverForm.member[i].phone);
+                            serverForm.waiting.Add(user);
+                            stdNum = serverForm.member[i].classNumber;  //중복로그인 체크를 위한 학번저장; 
+                            break;
+                        }
+                    }
+                }
+
+                byte[] buf = Encoding.UTF8.GetBytes(response);
+                ns.Write(buf, 0, buf.Length);
+                ns.Flush();
+
+                // 채팅을 킬지말지 버퍼를 받음
+                // buf: chatOn√ or fail√
+                ns.Read(buf, 0, buf.Length);
+                string recv = Encoding.UTF8.GetString(buf);
+                string[] chat = recv.Split('√');
+
+                if (chat[0] == "chatOn")
+                {
+                    chatOn = 0;
+                    serverForm.SendHello(user);
+                }
+            }
+        }
+
+        // 채팅버퍼를 처리합니다.
+        // msg: chat√채팅내용√
+        private void RecvChat(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            if (msgArray[0] == "chat")
+            {
+                serverForm.SendChat(msg);
+            }
+        }
+
+        // 대전신청을 처리합니다.
+        // msg: battle√이름√학번√상대방학번√
+        // msg: battleYes√학번√ or battleNo√학번√
+        private void RecvBattle(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            if (msgArray[0] == "battle" || msgArray[0] == "battleYes" || msgArray[0] == "battleNo")
+            {
+                serverForm.SendBattle(msg);
+            }
+        }
+
+        //start버튼을 클라이언트에서 누르면 랜덤함수 실행
+        // msg : start√num[0]√num[1]...√
+        private void RecvStart(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            if (msgArray[0] == "start")
+            {
+                
+                int max = Convert.ToInt32(msgArray[1]);
+                int room = Convert.ToInt32(msgArray[2]);
+                //랜덤함수 msgarray[1]은 그림최대갯수 , room은방번호
+                serverForm.SendReady(max,room);
+
+            }
+        }
+
+        // 클라이언트 종료를 처리합니다.
+        // 클라이언트 종료 시, 쓰레드, 소켓이 종료되며 serverForm의 allClient에서 제외됩니다.
+        // msg: exit√
+        private void RecvExit(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            if (msgArray[0] == "exit")
+            {
+                this.chatOn = -1;
+                serverForm.connectCnt--;
+                this.clientSocket.Close();
+
+                for (int i = 0; i < serverForm.allClient.Count; i++)
+                {
+
+                    if (this.clNo == serverForm.allClient[i].clNo)
+                    {
+                        clsPerson leave = serverForm.waiting[i];
+                        serverForm.allClient.RemoveAt(i);
+                        serverForm.waiting.RemoveAt(i);
+                        serverForm.SendExit(leave);
+                        break;
+                    }
+                }
+
+                recvThr.Abort();
+            }
+        }
+
+        // 방에 나갈때의 버퍼를 처리합니다.
+        // msg: exitRoom√방번호√
+        private void RecvExitRoom(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            if (msgArray[0] == "exitRoom")
+            {
+                serverForm.SendExitRoom(msg);
+            }
+        }
+
+        #endregion
+
+        #endregion
+
+        // 기타함수를 관리합니다.
+        #region Etc
+
+        //중복 로그인 여부
+        public bool duplicating(string[] _arr)
+        {
+            for (int i = 0; i < serverForm.allClient.Count; i++)
+            {
+                if (_arr[1] == serverForm.allClient[i].stdNum)
+                    return true;
+            }
+            return false;
+        }
+
+        #endregion
+    }
+}

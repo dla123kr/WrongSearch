@@ -1,0 +1,297 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+using WrongSearch_Client.Class;
+using WrongSearch_Client.UC;
+using System.Resources;
+
+namespace WrongSearch_Client.UC
+{
+    public partial class GameUC : UserControl
+    {
+        // GameUC에서 사용되는 전역변수를 관리합니다.
+        #region 변수 모음
+
+        public ClientForm clientForm = null;
+        public LobbyUC lobbyUC = null;
+        public int max = 22;//현재그림갯수
+        int tik = 30; //시간초
+        public int stageNum = 3; // 첫 스테이지는 3부터다.
+        public int answerN = 0; // 임시 정답 개수
+        public List<Circle> circle = new List<Circle>();
+        public List<Circle> xLine = new List<Circle>();
+        public List<Answer> answer = new List<Answer>();
+        public Point Cpoint;
+        public Thread thr = null;
+        public bool isRunning = false;
+
+        #endregion
+
+        // Form의 켜짐에 관련된 함수를 관리합니다.
+        #region Form Load
+
+        // ClientForm과 이 유저컨트롤을 연결
+        public GameUC(ClientForm cf)
+        {
+            InitializeComponent();
+
+            clientForm = cf;
+        }
+
+        #endregion
+
+        // 클라이언트에서 서버로 버퍼를 보내는 함수를 관리합니다.
+        #region Send~
+
+        // 엔터칠 시 버퍼로 채팅을 보냅니다.
+        private void tbChatSend_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if ((tbChatSend.Text != "") && (e.KeyChar == (char)Keys.Enter))
+            {
+                e.Handled = true; //소리안나게함
+                NetworkStream ns = clientForm.clientSocket.GetStream();
+
+                // chat√사람이름 >> 채팅내용√방번호√
+                string msg = "chat√" + clientForm.user.name + " >> " + tbChatSend.Text + "√" + clientForm.user.room[0] + "√";
+                byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+                ns.Write(buf, 0, buf.Length);
+                ns.Flush();
+
+                tbChatSend.Clear();
+            }
+        }
+
+        #endregion
+
+        #region 기능 모음
+
+        private void pbLeft_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (isRunning)
+            {
+                Cursor cursor = this.Cursor;
+                Graphics g = pbRight.CreateGraphics();
+                Rectangle rect = new Rectangle(new Point(e.X, e.Y), this.Cursor.Size);
+                pbRight.Refresh();
+                cursor.Draw(g, rect);
+            }
+        }
+
+        private void pbRight_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (isRunning)
+            {
+                Cursor cursor = this.Cursor;
+                Graphics g = pbLeft.CreateGraphics();
+                Rectangle rect = new Rectangle(new Point(e.X, e.Y), this.Cursor.Size);
+                pbLeft.Refresh();
+                cursor.Draw(g, rect);
+            }
+        }
+
+        private void pbLeft_MouseLeave(object sender, EventArgs e)
+        {
+            pbRight.Refresh();
+        }
+
+        private void pbRight_MouseLeave(object sender, EventArgs e)
+        {
+            pbLeft.Refresh();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (tik >= 0)
+                label2.Text = (tik--).ToString();
+            else
+            {
+                label2.Text = "Time Over";
+                timer1.Stop();
+                MessageBox.Show("시간초과", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+
+        #endregion
+
+
+        private void pbLeft_Paint(object sender, PaintEventArgs e)
+        {
+            Pen pen = new Pen(Color.Blue, 3);
+            foreach (Circle c in circle)
+            {
+                e.Graphics.DrawEllipse(pen, c.p.X - 10, c.p.Y - 10, 20, 20);
+            }
+
+            pen = new Pen(Color.Red, 3);
+            Point[] pointArr = null;
+            foreach (Circle line in xLine)
+            {
+                pointArr = new Point[] {
+                    new Point(line.p.X-5, line.p.Y-5),
+                    new Point(line.p.X+5, line.p.Y+5)
+                };
+                e.Graphics.DrawLines(pen, pointArr);
+
+                pointArr = new Point[] {
+                    new Point(line.p.X-5, line.p.Y+5),
+                    new Point(line.p.X+5, line.p.Y-5)
+                };
+                e.Graphics.DrawLines(pen, pointArr);
+            }
+        }
+
+        private void pbRight_Paint(object sender, PaintEventArgs e)
+        {
+            Pen pen = new Pen(Color.Blue, 3);
+            foreach (Circle c in circle)
+            {
+                e.Graphics.DrawEllipse(pen, c.p.X - 10, c.p.Y - 10, 20, 20);
+            }
+
+            pen = new Pen(Color.Red, 3);
+            Point[] pointArr = null;
+            foreach (Circle line in xLine)
+            {
+                pointArr = new Point[] {
+                    new Point(line.p.X-5, line.p.Y-5),
+                    new Point(line.p.X+5, line.p.Y+5)
+                };
+                e.Graphics.DrawLines(pen, pointArr);
+
+                pointArr = new Point[] {
+                    new Point(line.p.X-5, line.p.Y+5),
+                    new Point(line.p.X+5, line.p.Y-5)
+                };
+                e.Graphics.DrawLines(pen, pointArr);
+            }
+        }
+
+        public void NextStage(int i)
+        {
+            if (i < 8)
+            {
+                string[] pictureNum = clientForm.pictureNum;
+                ResourceManager rm = Properties.Resources.ResourceManager;
+
+                label3.Text = "picture" + pictureNum[i] + "_1";
+                pbLeft.Image = (Image)rm.GetObject("picture" + pictureNum[i] + "_1");
+                pbRight.Image = (Image)rm.GetObject("picture" + pictureNum[i] + "_2");
+            }
+            else
+            {
+                clientForm.user.win++;
+                stageNum = 3;
+
+                answerN = 0;
+                Cpoint = new Point(0, 0);
+
+                circle.RemoveRange(0, circle.Count);
+                answer.RemoveRange(0, answer.Count);
+
+                pbLeft.Invalidate();
+                pbRight.Invalidate();
+
+                NetworkStream ns = clientForm.clientSocket.GetStream();
+
+                //gameend√학번 √
+                string msg = "gameend√" + clientForm.user.room[0] + "√" + clientForm.user.room[1] + "√";
+                byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+                ns.Write(buf, 0, buf.Length);
+                ns.Flush();
+
+            }
+        }
+
+        // stageNum이 3일 때가 첫번째 그림이다.
+        private void pbLeft_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (isRunning)
+            {
+                try
+                {
+                    string[] pictureNum = clientForm.pictureNum;
+
+                    answer = clientForm.answer;
+
+                    foreach (Answer a in answer)
+                    {
+                        if (a.fname == ("picture" + pictureNum[stageNum] + "_1.PNG"))
+                        {
+                            if ((e.X > a.Spoint.X) &&
+                                (e.X < a.Spoint.X + a.W) &&
+                                (e.Y > a.Spoint.Y) &&
+                                (e.Y < a.Spoint.Y + a.H) && !a.check)
+                            {
+                                a.check = true;
+                                answerN++;
+
+                                Cpoint.X = e.X;
+                                Cpoint.Y = e.Y;
+
+                                Circle circle1 = new Circle
+                                {
+                                    p = Cpoint
+                                };
+                                circle.Add(circle1);
+                                pbLeft.Invalidate();
+                                pbRight.Invalidate();
+
+                                if (answerN == 5)
+                                {
+                                    // timer1.Stop();
+                                    answerN = 0;
+                                    NextStage(++stageNum);
+                                    Cpoint = new Point(0, 0);
+
+                                    clientForm.statementUC.changeStatement();
+
+                                    circle.RemoveRange(0, circle.Count);
+                                    xLine.RemoveRange(0, xLine.Count);
+                                    pbLeft.Invalidate();
+                                    pbRight.Invalidate();
+                                }
+                                return;
+                            }
+                            else if ((e.X > a.Spoint.X) &&
+                                (e.X < a.Spoint.X + a.W) &&
+                                (e.Y > a.Spoint.Y) &&
+                                (e.Y < a.Spoint.Y + a.H) && a.check)
+                                return;
+                        }
+                    }
+
+                    // 틀린곳
+                    Circle line = new Circle
+                    {
+                        p = new Point(e.X, e.Y)
+                    };
+                    xLine.Add(line);
+                    pbLeft.Invalidate();
+                    pbRight.Invalidate();
+                }
+                catch { }
+            }
+        }
+
+        private void pbRight_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (isRunning)
+            {
+                pbLeft_MouseUp(sender, e);
+            }
+        }
+    }
+}

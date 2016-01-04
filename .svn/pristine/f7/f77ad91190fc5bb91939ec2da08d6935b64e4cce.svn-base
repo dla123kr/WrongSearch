@@ -1,0 +1,42 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+namespace WrongSearch_Client
+{
+    public partial class RegistForm : Form
+    {
+        public RegistForm()
+        {
+            InitializeComponent();
+        }
+
+        private void btnRegist_Click(object sender, EventArgs e)
+        {
+            if (tbClassNumber.Text == null || tbPassword.Text == null || tbPassConf.Text == null ||
+                tbName.Text == null || (!rbMan.Checked && !rbWoman.Checked) || tbPhone.Text == null)
+            {
+                MessageBox.Show("모든 칸을 채워주시기 바랍니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (tbClassNumber.Text.Length != 8)
+            {
+                MessageBox.Show("학번이 올바르지 않습니다. (8자리)", "알림", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+        }
+
+        private void tbClassNumber_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!(char.IsDigit(e.KeyChar) || e.KeyChar == Convert.ToChar(Keys.Back)))
+            {
+                e.Handled = true;
+            }
+        }
+    }
+}

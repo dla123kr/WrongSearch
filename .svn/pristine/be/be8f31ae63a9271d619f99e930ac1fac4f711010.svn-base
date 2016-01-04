@@ -1,0 +1,23 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+namespace WrongSearch_Client.UC
+{
+    public partial class StatementUC : UserControl
+    {
+        public ClientForm clientForm = null; 
+
+        public StatementUC(ClientForm cf)
+        {
+            InitializeComponent();
+
+            clientForm = cf;
+        }
+    }
+}

@@ -1,0 +1,51 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+namespace WrongSearch_Client.UC
+{
+    public partial class GameUC : UserControl
+    {
+        public ClientForm clientForm = null;
+
+        public Thread thr = null;
+
+        // ClientForm과 이 유저컨트롤을 연결
+        public GameUC(ClientForm cf)
+        {
+            InitializeComponent();
+
+            clientForm = cf;
+        }
+
+        // 엔터칠 시 버퍼로 채팅을 보냅니다.
+        private void tbChatSend_KeyDown(object sender, KeyEventArgs e)
+        {
+            if ((tbChatSend.Text != "") && (e.KeyCode == Keys.Enter))
+            {
+                NetworkStream ns = clientForm.clientSocket.GetStream();
+
+                // chat√사람이름 >> 채팅내용√
+                string msg = "chat√" + clientForm.person.name + " >> " + tbChatSend.Text + "√";
+                byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+                ns.Write(buf, 0, buf.Length);
+                ns.Flush();
+
+                tbChatSend.Clear();
+            }
+        }
+
+
+        
+    }
+}

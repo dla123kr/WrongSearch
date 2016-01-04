@@ -1,0 +1,66 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+namespace WrongSearch_Client.UC
+{
+    public partial class GameUC : UserControl
+    {
+        // GameUC에서 사용되는 전역변수를 관리합니다.
+        #region 변수 모음
+
+        public ClientForm clientForm = null;
+        public LobbyUC lobbyUC = null;
+        public int max = 22;//현재그림갯수 22x2개 
+
+        public Thread thr = null;
+
+        #endregion
+
+        // Form의 켜짐에 관련된 함수를 관리합니다.
+        #region Form Load
+
+        // ClientForm과 이 유저컨트롤을 연결
+        public GameUC(ClientForm cf)
+        {
+            InitializeComponent();
+
+            clientForm = cf;
+        }
+
+        #endregion
+
+        // 클라이언트에서 서버로 버퍼를 보내는 함수를 관리합니다.
+        #region Send~
+
+        // 엔터칠 시 버퍼로 채팅을 보냅니다.
+        private void tbChatSend_KeyDown(object sender, KeyEventArgs e)
+        {
+            if ((tbChatSend.Text != "") && (e.KeyCode == Keys.Enter))
+            {
+                e.Handled = true; //소리안나게함
+                NetworkStream ns = clientForm.clientSocket.GetStream();
+
+                // chat√사람이름 >> 채팅내용√방번호√
+                string msg = "chat√" + clientForm.user.name + " >> " + tbChatSend.Text + "√"+clientForm.roomNumber+"√";
+                byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+                ns.Write(buf, 0, buf.Length);
+                ns.Flush();
+
+                tbChatSend.Clear();
+            }
+        }
+
+        #endregion
+    }
+}

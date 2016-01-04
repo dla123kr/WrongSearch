@@ -1,0 +1,111 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+namespace WrongSearch_Server
+{
+    public partial class ServerForm : Form
+    {
+        private TcpListener serverSocket = null;
+        private TcpClient clientSocket = null;
+
+        public int connectCnt = 0;
+        public string recvMsg = null;
+
+        public ServerForm()
+        {
+            InitializeComponent();
+        }
+
+        private void ServerForm_Load(object sender, EventArgs e)
+        {
+            lbIP.Text = GetIP();
+
+            Thread thr = new Thread(new ThreadStart(ListenClient));
+            thr.Start();
+        }
+
+        private string GetIP()
+        {
+            IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
+            string ip = null;
+            for (int i = 0; i < host.AddressList.Length; i++)
+            {
+                if (host.AddressList[i].AddressFamily == AddressFamily.InterNetwork)
+                    ip = host.AddressList[i].ToString();
+            }
+            return ip;
+        }
+
+        private void ListenClient()
+        {
+            serverSocket = new TcpListener(IPAddress.Any, 8088);
+            serverSocket.Start();
+
+            while (true)
+            {
+                clientSocket = serverSocket.AcceptTcpClient();
+                connectCnt++;
+
+                handleClient client = new handleClient(this);
+                client.startClient(clientSocket, connectCnt.ToString());
+            }
+        }
+
+        private void ServerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Application.ExitThread();
+            Environment.Exit(0);
+        }
+    }
+
+    public class handleClient
+    {
+        ServerForm serverForm = null;
+
+        TcpClient clientSocket;
+        string clNo;
+
+        public handleClient(ServerForm sf)
+        {
+            serverForm = sf;
+        }
+
+
+        public void startClient(TcpClient inClientSocket, string clineNo)
+        {
+            this.clientSocket = inClientSocket;
+            this.clNo = clineNo;
+            Thread recvThr = new Thread(RecvBuffer);
+            recvThr.Start();
+        }
+        
+        private void RecvBuffer()
+        {
+            while (true)
+            {
+                byte[] buf = new byte[1024];
+                string msg = null;
+
+                try
+                {
+                    NetworkStream ns = clientSocket.GetStream();
+                    ns.Read(buf, 0, buf.Length);
+                    msg = Encoding.UTF8.GetString(buf);
+
+                    // 클라이언트로 부터 메세지를 받아옴
+                }
+                catch { }
+            }
+        }
+    }
+}

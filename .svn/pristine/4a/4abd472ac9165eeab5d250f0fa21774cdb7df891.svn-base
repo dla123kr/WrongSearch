@@ -1,0 +1,129 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+using WrongSearch_Client.UC;
+
+using WrongSearch_Server.Class;
+
+namespace WrongSearch_Client
+{
+    public partial class ClientForm : Form
+    {
+        public TcpClient clientSocket = new TcpClient();
+
+        public clsPerson person = new clsPerson();
+        public Thread thr = null;
+
+        public LoginUC loginUC = null;
+        public GameUC gameUC = null;
+
+        public ClientForm()
+        {
+            InitializeComponent();
+        }
+
+        private void ClientForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // 프로그램 종료시 모든 쓰레드 종료
+            Application.ExitThread();
+            Environment.Exit(0);
+        }
+
+        private void ClientForm_Load(object sender, EventArgs e)
+        {
+            loginUC = new LoginUC(this);
+            pnMain.Controls.Add(loginUC);
+
+            thr = new Thread(RecvBuffer);
+            thr.Start();
+        }
+
+        delegate void GameStartDelegate();
+        private void GameStart()
+        {
+            this.Text = "틀린그림찾기";
+            this.Size = new Size(1000, 700);
+            pnMain.Size = new Size(990, 669);
+            this.Location = new Point(150, 30);
+
+            pnMain.Controls.Clear();
+            gameUC = new GameUC(this);
+            pnMain.Controls.Add(gameUC);
+        }
+
+        private void RecvBuffer()
+        {
+            while (true)
+            {
+                byte[] buf = new byte[1024];
+                string msg = null;
+
+                try
+                {
+                    NetworkStream ns = clientSocket.GetStream();
+
+                    ns.Read(buf, 0, buf.Length);
+                    msg = Encoding.UTF8.GetString(buf);
+
+                    // 여기부터 받아오는 버퍼의 종류마다 다르게 처리.
+                    RecvLogin(msg);
+                    RecvChat(msg);
+                }
+                catch { }
+            }
+        }
+
+        private void RecvLogin(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+            // login√pass or fail√학번√이름√
+            if (msgArray[0] == "login")
+            {
+                try
+                {
+                    byte[] buf = new byte[1024];
+                    // pass or fail√이름
+                    if (msgArray[1] == "fail")
+                    {
+                        MessageBox.Show("입력한 정보가 올바르지 않습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                }
+                catch { }
+
+                MessageBox.Show(msgArray[3] + "님\n환영합니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                person.classNumber = msgArray[2];
+                person.name = msgArray[3];
+
+                this.Invoke(new GameStartDelegate(GameStart));
+            }
+        }
+
+        delegate void ChatDelegate(string msg);
+        private void _RecvChat(string msg)
+        {
+            gameUC.rtbChatting.AppendText("\n" + msg);
+            gameUC.rtbChatting.ScrollToCaret();
+        }
+        private void RecvChat(string msg)
+        {
+            string[] msgArray = msg.Split('√');
+
+            if (msgArray[0] == "chat")
+            {
+                this.Invoke(new ChatDelegate(_RecvChat), new object[] { msgArray[1] });
+            }
+        }
+    }
+}

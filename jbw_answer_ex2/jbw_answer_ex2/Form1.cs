@@ -1,0 +1,195 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Serialization;
+using System.IO;
+
+namespace jbw_answer_ex2
+{
+    public partial class Form1 : Form
+    {
+        string fname1, fname2;
+        Bitmap img1, img2;
+        Point startPoint,endPoint;
+        int Anum;
+        string[] fnArray;
+        //bool isClick=false;
+        
+        public List<Answer> answer = new List<Answer>();
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            answer = XMLDeserialize("answer.xml");
+            RefreshList();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            XMLSerialize(answer, "answer.xml");
+        }
+
+        public void XMLSerialize(List<Answer> list, String filename)
+        {
+            XmlSerializer serializer = null;
+            FileStream stream = null;
+            try
+            {
+                serializer = new XmlSerializer(typeof(List<Answer>));
+                stream = new FileStream(filename, FileMode.Create, FileAccess.Write);
+                serializer.Serialize(stream, list);
+            }
+            finally
+            {
+                if (stream != null)
+                    stream.Close();
+            }
+        }
+
+        public static List<Answer> XMLDeserialize(String filename)
+        {
+            XmlSerializer serializer = null;
+            FileStream stream = null;
+            List<Answer> list = new List<Answer>();
+            try
+            {
+                serializer = new XmlSerializer(typeof(List<Answer>));
+                stream = new FileStream(filename, FileMode.Open);
+                list = (List<Answer>)serializer.Deserialize(stream);
+            }
+            catch { }
+            finally
+            {
+                if (stream != null)
+                    stream.Close();
+            }
+            return list;
+        }
+        public void RefreshList()
+        {
+            listView1.Items.Clear();
+
+            for (int i = 0; i < answer.Count; i++)
+            {
+                ListViewItem t = new ListViewItem();
+                t.SubItems[0].Text = answer[i].fname;
+                t.SubItems.Add(answer[i].num.ToString());
+                t.SubItems.Add(answer[i].Spoint.X + "," + answer[i].Spoint.Y);
+                t.SubItems.Add(answer[i].W.ToString());
+                t.SubItems.Add(answer[i].H.ToString());
+
+                listView1.Items.Add(t);
+            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+                if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    pictureBox1.Image = Image.FromFile(openFileDialog1.FileName);
+                    fname1 = openFileDialog1.FileName.ToString();
+                    img1 = new Bitmap(fname1);
+                    fnArray = fname1.Split('\\');
+                }
+                if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    pictureBox2.Image = Image.FromFile(openFileDialog1.FileName);
+                    fname2 = openFileDialog1.FileName.ToString();
+                    img2 = new Bitmap(fname2);
+
+                    Anum = 0;
+                }
+
+              //  this.Size = new Size(img1.Width + img2.Width + 400, (img1.Height > img2.Height ? img1.Height : img2.Height) + 100);
+
+               // pictureBox2.Location = new Point(img1.Width + 50, pictureBox2.Location.Y);
+            }
+            catch(Exception err)
+            {}
+        }
+
+        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            startPoint = new Point(e.X, e.Y); //현재 마우스 좌표 저장
+            //textBox1.AppendText(e.X+","+e.Y+"\r\n");
+       //     isClick = true;
+        }
+
+        private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
+        {
+            Anum++;
+            endPoint = new Point(e.X, e.Y);
+            Answer answer1 = new Answer
+            {
+                fname = fnArray[fnArray.Length - 1],
+                num=Anum,
+                Spoint=startPoint,
+                W=endPoint.X-startPoint.X,
+                H=endPoint.Y-startPoint.Y
+            };
+            answer.Add(answer1);
+
+            RefreshList();
+           // textBox1.AppendText(e.X + "," + e.Y + "\r\n");
+          //  isClick = false;
+        }
+
+        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+        //    textBox1.AppendText(e.X + "," + e.Y + "\r\n");
+          /*  if (isClick == true)
+            {
+                endPoint = new Point(e.X, e.Y);
+             
+            }*/
+        }
+
+        private void pictureBox1_Paint(object sender, PaintEventArgs e)
+        {
+         /*   try
+            {
+                Graphics gg = pictureBox1.CreateGraphics();
+              //  pictureBox1.Image = Image.FromFile(fname1);
+                gg.DrawRectangle(Pens.Red, startPoint.X, startPoint.Y, (startPoint.X - endPoint.X), (startPoint.Y - endPoint.Y));
+            }
+            catch (Exception)
+            {
+            }*/
+        }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            XMLSerialize(answer, "answer.xml");
+        }
+
+       
+
+        
+    }
+
+    public class Answer     //정답배열
+    {
+        public string fname;    //파일이름
+        public int num;         
+        public Point Spoint;    //정답위치
+        public int W,H;
+    }
+}

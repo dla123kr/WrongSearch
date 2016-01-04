@@ -1,0 +1,158 @@
+﻿namespace WrongSearch_Client.UC
+{
+    partial class StatementUC
+    {
+        /// <summary> 
+        /// 필수 디자이너 변수입니다.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary> 
+        /// 사용 중인 모든 리소스를 정리합니다.
+        /// </summary>
+        /// <param name="disposing">관리되는 리소스를 삭제해야 하면 true이고, 그렇지 않으면 false입니다.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region 구성 요소 디자이너에서 생성한 코드
+
+        /// <summary> 
+        /// 디자이너 지원에 필요한 메서드입니다. 
+        /// 이 메서드의 내용을 코드 편집기로 수정하지 마십시오.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StatementUC));
+            this.btnStart = new System.Windows.Forms.Button();
+            this.btnExit = new System.Windows.Forms.Button();
+            this.pbUserBar1 = new System.Windows.Forms.PictureBox();
+            this.pbUserBar2 = new System.Windows.Forms.PictureBox();
+            this.pbUser1 = new System.Windows.Forms.PictureBox();
+            this.pbUser2 = new System.Windows.Forms.PictureBox();
+            this.lbUserName1 = new System.Windows.Forms.Label();
+            this.lbUserName2 = new System.Windows.Forms.Label();
+            ((System.ComponentModel.ISupportInitialize)(this.pbUserBar1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbUserBar2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbUser1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbUser2)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // btnStart
+            // 
+            this.btnStart.Location = new System.Drawing.Point(22, 244);
+            this.btnStart.Name = "btnStart";
+            this.btnStart.Size = new System.Drawing.Size(288, 39);
+            this.btnStart.TabIndex = 0;
+            this.btnStart.Text = "게임 시작";
+            this.btnStart.UseVisualStyleBackColor = true;
+            this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
+            // 
+            // btnExit
+            // 
+            this.btnExit.Location = new System.Drawing.Point(243, 16);
+            this.btnExit.Name = "btnExit";
+            this.btnExit.Size = new System.Drawing.Size(67, 25);
+            this.btnExit.TabIndex = 2;
+            this.btnExit.Text = "나가기";
+            this.btnExit.UseVisualStyleBackColor = true;
+            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
+            // 
+            // pbUserBar1
+            // 
+            this.pbUserBar1.Image = ((System.Drawing.Image)(resources.GetObject("pbUserBar1.Image")));
+            this.pbUserBar1.Location = new System.Drawing.Point(22, 77);
+            this.pbUserBar1.Name = "pbUserBar1";
+            this.pbUserBar1.Size = new System.Drawing.Size(288, 25);
+            this.pbUserBar1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pbUserBar1.TabIndex = 3;
+            this.pbUserBar1.TabStop = false;
+            // 
+            // pbUserBar2
+            // 
+            this.pbUserBar2.Image = ((System.Drawing.Image)(resources.GetObject("pbUserBar2.Image")));
+            this.pbUserBar2.Location = new System.Drawing.Point(22, 131);
+            this.pbUserBar2.Name = "pbUserBar2";
+            this.pbUserBar2.Size = new System.Drawing.Size(288, 25);
+            this.pbUserBar2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pbUserBar2.TabIndex = 4;
+            this.pbUserBar2.TabStop = false;
+            // 
+            // pbUser1
+            // 
+            this.pbUser1.Image = ((System.Drawing.Image)(resources.GetObject("pbUser1.Image")));
+            this.pbUser1.Location = new System.Drawing.Point(22, 67);
+            this.pbUser1.Name = "pbUser1";
+            this.pbUser1.Size = new System.Drawing.Size(52, 41);
+            this.pbUser1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pbUser1.TabIndex = 5;
+            this.pbUser1.TabStop = false;
+            // 
+            // pbUser2
+            // 
+            this.pbUser2.Image = ((System.Drawing.Image)(resources.GetObject("pbUser2.Image")));
+            this.pbUser2.Location = new System.Drawing.Point(22, 123);
+            this.pbUser2.Name = "pbUser2";
+            this.pbUser2.Size = new System.Drawing.Size(52, 41);
+            this.pbUser2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.pbUser2.TabIndex = 6;
+            this.pbUser2.TabStop = false;
+            // 
+            // lbUserName1
+            // 
+            this.lbUserName1.AutoSize = true;
+            this.lbUserName1.Location = new System.Drawing.Point(20, 52);
+            this.lbUserName1.Name = "lbUserName1";
+            this.lbUserName1.Size = new System.Drawing.Size(41, 12);
+            this.lbUserName1.TabIndex = 7;
+            this.lbUserName1.Text = "　　　";
+            // 
+            // lbUserName2
+            // 
+            this.lbUserName2.AutoSize = true;
+            this.lbUserName2.Location = new System.Drawing.Point(20, 167);
+            this.lbUserName2.Name = "lbUserName2";
+            this.lbUserName2.Size = new System.Drawing.Size(41, 12);
+            this.lbUserName2.TabIndex = 8;
+            this.lbUserName2.Text = "　　　";
+            // 
+            // StatementUC
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.lbUserName2);
+            this.Controls.Add(this.lbUserName1);
+            this.Controls.Add(this.pbUser2);
+            this.Controls.Add(this.pbUser1);
+            this.Controls.Add(this.pbUserBar2);
+            this.Controls.Add(this.pbUserBar1);
+            this.Controls.Add(this.btnExit);
+            this.Controls.Add(this.btnStart);
+            this.Name = "StatementUC";
+            this.Size = new System.Drawing.Size(338, 300);
+            ((System.ComponentModel.ISupportInitialize)(this.pbUserBar1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbUserBar2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbUser1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pbUser2)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+
+        private System.Windows.Forms.Button btnStart;
+        private System.Windows.Forms.Button btnExit;
+        public System.Windows.Forms.PictureBox pbUserBar1;
+        public System.Windows.Forms.PictureBox pbUserBar2;
+        public System.Windows.Forms.PictureBox pbUser1;
+        public System.Windows.Forms.PictureBox pbUser2;
+        public System.Windows.Forms.Label lbUserName1;
+        public System.Windows.Forms.Label lbUserName2;
+    }
+}

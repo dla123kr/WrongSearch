@@ -1,0 +1,68 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+namespace WrongSearch_Client.UC
+{
+    public partial class GameUC : UserControl
+    {
+        public ClientForm clientForm = null;
+        public LobbyUC lobbyUC = null;
+        int max = 22;//현재그림갯수 22x2개 
+
+        public Thread thr = null;
+
+        // ClientForm과 이 유저컨트롤을 연결
+        public GameUC(ClientForm cf)
+        {
+            InitializeComponent();
+
+            clientForm = cf;
+        }
+
+        // 엔터칠 시 버퍼로 채팅을 보냅니다.
+        private void tbChatSend_KeyDown(object sender, KeyEventArgs e)
+        {
+            if ((tbChatSend.Text != "") && (e.KeyCode == Keys.Enter))
+            {
+                NetworkStream ns = clientForm.clientSocket.GetStream();
+
+                // chat√사람이름 >> 채팅내용√방번호√
+                string msg = "chat√" + clientForm.user.name + " >> " + tbChatSend.Text + "√"+clientForm.roomNumber+"√";
+                byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+                ns.Write(buf, 0, buf.Length);
+                ns.Flush();
+
+                tbChatSend.Clear();
+            }
+        }
+        //버튼누르면 버퍼로 시작이랑 총그림갯수를 보냅니다
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            NetworkStream ns = clientForm.clientSocket.GetStream();
+
+            //start√총그림갯수√사람이름√
+            string msg = "start√" + max + "√";
+           
+            byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+            ns.Write(buf, 0, buf.Length);
+            ns.Flush();
+            this.btnStart.Visible = false;
+        }
+
+
+
+        
+    }
+}

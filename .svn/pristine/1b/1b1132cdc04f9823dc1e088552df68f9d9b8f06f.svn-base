@@ -1,0 +1,53 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+namespace WrongSearch_Client.UC
+{
+    public partial class GameUC : UserControl
+    {
+        public ClientForm clientForm = null;
+
+        public Thread thr = null;
+
+        public GameUC(ClientForm cf)
+        {
+            InitializeComponent();
+
+            clientForm = cf;
+        }
+
+        private void tbChatSend_KeyDown(object sender, KeyEventArgs e)
+        {
+            if ((tbChatSend.Text != "") && (e.KeyCode == Keys.Enter))
+            {
+                //rtbChatting.AppendText("\n" + msg);
+                //rtbChatting.ScrollToCaret();
+                //tbChatSend.Clear();
+
+                // 버퍼를 보냄
+                NetworkStream ns = clientForm.clientSocket.GetStream();
+
+                string msg = "chat√" + clientForm.person.name + " >> " + tbChatSend.Text + "√";
+                byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+                ns.Write(buf, 0, buf.Length);
+                ns.Flush();
+
+                tbChatSend.Clear();
+            }
+        }
+
+
+        
+    }
+}

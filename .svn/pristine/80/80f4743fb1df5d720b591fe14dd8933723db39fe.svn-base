@@ -1,0 +1,119 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+namespace WrongSearch_Client
+{
+    public partial class ClientForm : Form
+    {
+        private TcpClient clientSocket = new TcpClient();
+
+        public ClientForm()
+        {
+            InitializeComponent();
+        }
+
+        private void ClientForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // 프로그램 종료시 모든 쓰레드 종료
+            Application.ExitThread();
+            Environment.Exit(0);
+        }
+
+        private void btnConnect_Click(object sender, EventArgs e)
+        {
+            // 로그인 시도
+            try
+            {
+                // 입력한 아이피의 서버가 열려있을 경우
+                clientSocket.Connect(tbIP.Text, 8088);
+                MessageBox.Show("접속에 성공하셨습니다.","알림",MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                tbIP.Enabled = false;
+                btnConnect.Enabled = false;
+
+                tbClassNumber.Enabled = true;
+                tbPassword.Enabled = true;
+                btnLogin.Enabled = true;
+                btnRegist.Enabled = true;
+            }
+            catch
+            {
+                // 입력한 아이피의 서버가 닫혀있을 경우
+                MessageBox.Show("접속에 실패하셨습니다.","알림",MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnRegist_Click(object sender, EventArgs e)
+        {
+            // 회원가입 폼 띄움
+            RegistForm rf = new RegistForm(clientSocket);
+            rf.ShowDialog();
+        }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+            // 로그인 시도
+            if (tbClassNumber.Text == "" || tbPassword.Text == "")
+            {
+                MessageBox.Show("학번과 비밀번호를 모두 입력해 주십시오.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            SendLogin();
+
+            string msg = null;
+            string[] msgArray = null;
+            try
+            {
+                byte[] buf = new byte[1024];
+
+                NetworkStream ns = clientSocket.GetStream();
+                ns.Read(buf, 0, buf.Length);
+                msg = Encoding.UTF8.GetString(buf);
+                msgArray = msg.Split('/');
+                // pass or fail/이름
+                if (msgArray[0] == "fail")
+                {
+                    MessageBox.Show("입력한 정보가 올바르지 않습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            catch { }
+
+            MessageBox.Show(msgArray[1] + "님\n환영합니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+        }
+
+        private void SendLogin()
+        {
+            // 서버에 buffer를 보내 로그인을 시도
+
+            NetworkStream ns = clientSocket.GetStream();
+
+            string msg = "login/" + tbClassNumber.Text + "/" + tbPassword.Text + "/";
+            byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+            ns.Write(buf, 0, buf.Length);
+            ns.Flush();
+        }
+
+        private void tbClassNumber_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!(char.IsDigit(e.KeyChar) || e.KeyChar == Convert.ToChar(Keys.Back)))
+            {
+                e.Handled = true;
+            }
+        }
+
+    }
+}

@@ -1,0 +1,150 @@
+﻿namespace WrongSearch_Client.UC
+{
+    partial class LobbyUC
+    {
+        /// <summary> 
+        /// 필수 디자이너 변수입니다.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary> 
+        /// 사용 중인 모든 리소스를 정리합니다.
+        /// </summary>
+        /// <param name="disposing">관리되는 리소스를 삭제해야 하면 true이고, 그렇지 않으면 false입니다.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region 구성 요소 디자이너에서 생성한 코드
+
+        /// <summary> 
+        /// 디자이너 지원에 필요한 메서드입니다. 
+        /// 이 메서드의 내용을 코드 편집기로 수정하지 마십시오.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.components = new System.ComponentModel.Container();
+            this.lvWaiting = new System.Windows.Forms.ListView();
+            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.cmsBattle = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.정보보기ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnCreate = new System.Windows.Forms.Button();
+            this.btnJoin = new System.Windows.Forms.Button();
+            this.cmsBattle.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // lvWaiting
+            // 
+            this.lvWaiting.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1,
+            this.columnHeader2,
+            this.columnHeader3,
+            this.columnHeader4,
+            this.columnHeader5});
+            this.lvWaiting.FullRowSelect = true;
+            this.lvWaiting.Location = new System.Drawing.Point(3, 9);
+            this.lvWaiting.Name = "lvWaiting";
+            this.lvWaiting.Size = new System.Drawing.Size(350, 197);
+            this.lvWaiting.TabIndex = 1;
+            this.lvWaiting.UseCompatibleStateImageBehavior = false;
+            this.lvWaiting.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader1
+            // 
+            this.columnHeader1.Text = "이름";
+            this.columnHeader1.Width = 71;
+            // 
+            // columnHeader2
+            // 
+            this.columnHeader2.Text = "학번";
+            this.columnHeader2.Width = 98;
+            // 
+            // columnHeader3
+            // 
+            this.columnHeader3.Text = "성별";
+            this.columnHeader3.Width = 55;
+            // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Text = "승";
+            this.columnHeader4.Width = 54;
+            // 
+            // columnHeader5
+            // 
+            this.columnHeader5.Text = "ing";
+            this.columnHeader5.Width = 47;
+            // 
+            // cmsBattle
+            // 
+            this.cmsBattle.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.정보보기ToolStripMenuItem});
+            this.cmsBattle.Name = "cmsBattle";
+            this.cmsBattle.Size = new System.Drawing.Size(153, 48);
+            // 
+            // 정보보기ToolStripMenuItem
+            // 
+            this.정보보기ToolStripMenuItem.Name = "정보보기ToolStripMenuItem";
+            this.정보보기ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.정보보기ToolStripMenuItem.Text = "정보보기";
+            this.정보보기ToolStripMenuItem.Click += new System.EventHandler(this.정보보기ToolStripMenuItem_Click);
+            // 
+            // btnCreate
+            // 
+            this.btnCreate.Font = new System.Drawing.Font("Malgun Gothic", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.btnCreate.Location = new System.Drawing.Point(40, 212);
+            this.btnCreate.Name = "btnCreate";
+            this.btnCreate.Size = new System.Drawing.Size(119, 85);
+            this.btnCreate.TabIndex = 2;
+            this.btnCreate.Text = "방만들기";
+            this.btnCreate.UseVisualStyleBackColor = true;
+            this.btnCreate.Click += new System.EventHandler(this.btnCreate_Click);
+            // 
+            // btnJoin
+            // 
+            this.btnJoin.Font = new System.Drawing.Font("Malgun Gothic", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.btnJoin.Location = new System.Drawing.Point(198, 212);
+            this.btnJoin.Name = "btnJoin";
+            this.btnJoin.Size = new System.Drawing.Size(119, 85);
+            this.btnJoin.TabIndex = 3;
+            this.btnJoin.Text = "참가";
+            this.btnJoin.UseVisualStyleBackColor = true;
+            this.btnJoin.Click += new System.EventHandler(this.btnJoin_Click);
+            // 
+            // LobbyUC
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.btnJoin);
+            this.Controls.Add(this.btnCreate);
+            this.Controls.Add(this.lvWaiting);
+            this.Name = "LobbyUC";
+            this.Size = new System.Drawing.Size(356, 300);
+            this.cmsBattle.ResumeLayout(false);
+            this.ResumeLayout(false);
+
+        }
+
+        #endregion
+
+        public System.Windows.Forms.ListView lvWaiting;
+        private System.Windows.Forms.ColumnHeader columnHeader1;
+        private System.Windows.Forms.ColumnHeader columnHeader2;
+        private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.ColumnHeader columnHeader5;
+        private System.Windows.Forms.ContextMenuStrip cmsBattle;
+        private System.Windows.Forms.Button btnCreate;
+        private System.Windows.Forms.Button btnJoin;
+        private System.Windows.Forms.ToolStripMenuItem 정보보기ToolStripMenuItem;
+
+    }
+}

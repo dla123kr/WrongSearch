@@ -1,0 +1,105 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+namespace WrongSearch_Client
+{
+    public partial class RegistForm : Form
+    {
+        private TcpClient clientSocket = null;
+
+        public RegistForm(TcpClient cs)
+        {
+            InitializeComponent();
+
+            clientSocket = cs;
+        }
+
+        private void btnRegist_Click(object sender, EventArgs e)
+        {
+            if (tbClassNumber.Text == "" || tbPassword.Text == "" || tbPassConf.Text == "" ||
+                tbName.Text == "" || (!rbMan.Checked && !rbWoman.Checked) || tbPhone.Text == "")
+            {
+                MessageBox.Show("모든 칸을 채워주시기 바랍니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (tbClassNumber.Text.Length != 8)
+            {
+                MessageBox.Show("학번이 올바르지 않습니다. (8자리)", "알림", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            if (tbPassword.Text != tbPassConf.Text)
+            {
+                MessageBox.Show("비밀번호가 일치하지 않습니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            SendRegist();
+
+            string msg = null;
+            try
+            {
+                byte[] buf = new byte[4];
+
+                NetworkStream ns = clientSocket.GetStream();
+                ns.Read(buf, 0, buf.Length);
+                msg = Encoding.UTF8.GetString(buf);
+
+                if (msg == "fail")
+                {
+                    MessageBox.Show("이미 가입된 학번입니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            catch { }
+
+            MessageBox.Show(tbName.Text + "님 가입을 환영합니다.", "알림", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            this.Close();
+        }
+
+        private void SendRegist()
+        {
+            string gender = null;
+            if(rbMan.Checked)
+                gender = "남";
+            else if(rbWoman.Checked)
+                gender = "여";
+
+            NetworkStream ns = clientSocket.GetStream();
+
+            // regist√학번√비밀번호√이름√성별√연락처
+            string msg = "regist√" + tbClassNumber.Text + "√" + tbPassword.Text + "√" +
+                tbName.Text + "√" + gender + "√" + tbPhone.Text + "√";
+            byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+            ns.Write(buf, 0, buf.Length);
+            ns.Flush();
+        }
+
+        private void tbClassNumber_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!(char.IsDigit(e.KeyChar) || e.KeyChar == Convert.ToChar(Keys.Back)))
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void tbPhone_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!(char.IsDigit(e.KeyChar) || e.KeyChar == Convert.ToChar(Keys.Back)))
+            {
+                e.Handled = true;
+            }
+        }
+    }
+}

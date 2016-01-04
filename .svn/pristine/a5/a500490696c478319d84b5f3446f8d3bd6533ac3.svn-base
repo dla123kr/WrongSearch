@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<ArrayOfAnswer xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Answer>
+    <fname>C:\Users\Home\Documents\Visual Studio 2010\Projects\jbw_answer\jbw_answer\bin\Release\Picture\2012071300000000000084611_1.jpg</fname>
+    <num>1</num>
+    <Spoint>
+      <X>109</X>
+      <Y>21</Y>
+    </Spoint>
+    <W>109</W>
+    <H>21</H>
+  </Answer>
+  <Answer>
+    <fname>C:\Users\Home\Documents\Visual Studio 2010\Projects\jbw_answer\jbw_answer\bin\Release\Picture\2012071300000000000084611_1.jpg</fname>
+    <num>2</num>
+    <Spoint>
+      <X>118</X>
+      <Y>423</Y>
+    </Spoint>
+    <W>118</W>
+    <H>423</H>
+  </Answer>
+  <Answer>
+    <fname>C:\Users\Home\Documents\Visual Studio 2010\Projects\jbw_answer\jbw_answer\bin\Release\Picture\2012071300000000000084611_1.jpg</fname>
+    <num>3</num>
+    <Spoint>
+      <X>120</X>
+      <Y>277</Y>
+    </Spoint>
+    <W>120</W>
+    <H>277</H>
+  </Answer>
+  <Answer>
+    <fname>C:\Users\Home\Documents\Visual Studio 2010\Projects\jbw_answer\jbw_answer\bin\Release\Picture\2012071300000000000084611_1.jpg</fname>
+    <num>4</num>
+    <Spoint>
+      <X>207</X>
+      <Y>190</Y>
+    </Spoint>
+    <W>207</W>
+    <H>190</H>
+  </Answer>
+  <Answer>
+    <fname>C:\Users\Home\Documents\Visual Studio 2010\Projects\jbw_answer\jbw_answer\bin\Release\Picture\2012071300000000000084611_1.jpg</fname>
+    <num>5</num>
+    <Spoint>
+      <X>187</X>
+      <Y>418</Y>
+    </Spoint>
+    <W>187</W>
+    <H>418</H>
+  </Answer>
+</ArrayOfAnswer>

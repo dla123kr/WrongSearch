@@ -1,0 +1,43 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+namespace WrongSearch_Client.UC
+{
+    public partial class StatementUC : UserControl
+    {
+        public ClientForm clientForm = null; 
+
+        public StatementUC(ClientForm cf)
+        {
+            InitializeComponent();
+
+            clientForm = cf;
+        }
+
+        //버튼누르면 버퍼로 시작이랑 총그림갯수를 보냅니다
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            int max = clientForm.gameUC.max; //총그림갯수
+            NetworkStream ns = clientForm.clientSocket.GetStream();
+
+            //start√총그림갯수√사람이름√
+            string msg = "start√" + max + "√"+clientForm.user.room+"√";
+
+            byte[] buf = Encoding.UTF8.GetBytes(msg);
+
+            ns.Write(buf, 0, buf.Length);
+            ns.Flush();
+            this.btnStart.Visible = false;
+        }
+    }
+}

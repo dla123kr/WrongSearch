@@ -1,0 +1,65 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+using System.Threading;
+using System.Net;
+using System.Net.Sockets;
+
+namespace WrongSearch_Client
+{
+    public partial class ClientForm : Form
+    {
+        private TcpClient clientSocket = new TcpClient();
+
+        public ClientForm()
+        {
+            InitializeComponent();
+        }
+
+        private void ClientForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            Application.ExitThread();
+            Environment.Exit(0);
+        }
+
+        private void btnConnect_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                clientSocket.Connect(tbIP.Text, 8088);
+                MessageBox.Show("접속에 성공하셨습니다.","알림",MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                tbIP.Enabled = false;
+                btnConnect.Enabled = false;
+
+                tbClassNumber.Enabled = true;
+                tbPassword.Enabled = true;
+                btnLogin.Enabled = true;
+                btnRegist.Enabled = true;
+            }
+            catch
+            {
+                MessageBox.Show("접속에 실패하셨습니다.","알림",MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnRegist_Click(object sender, EventArgs e)
+        {
+            RegistForm rf = new RegistForm();
+            rf.ShowDialog();
+        }
+
+        private void btnLogin_Click(object sender, EventArgs e)
+        {
+
+        }
+
+
+    }
+}

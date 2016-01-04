@@ -1,0 +1,28 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace WrongSearch_Client.Class
+{
+    public class clsPerson
+    {
+        public string classNumber;
+        public string password;
+
+        public string name;
+        public string phone;
+        public int gender;
+
+        public clsPerson() { }
+        public clsPerson(string _classNumber, string _password,
+            string _name, string _phone, int _gender)
+        {
+            classNumber = _classNumber;
+            password = _password;
+            name = _name;
+            phone = _phone;
+            gender = _gender;
+        }
+    }
+}
