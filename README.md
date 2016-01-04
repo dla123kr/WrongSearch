@@ -9,5 +9,7 @@
 
 # 실행
 Run.zip의 압축을 풀어,
+
 server폴더의 WrongSearch_Server.exe
+
 client폴더의 WrongSearch_Client.exe 를 이용하시면 됩니다.
